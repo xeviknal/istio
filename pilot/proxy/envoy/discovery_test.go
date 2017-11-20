@@ -412,6 +412,14 @@ func TestRouteDiscoveryWeighted(t *testing.T) {
 	}
 }
 
+func TestRouteDiscoveryByon(t *testing.T) {
+	_, registry, ds := commonSetup(t)
+	addConfig(registry, byonRouteRule, t)
+	url := fmt.Sprintf("/v1/routes/80/%s/%s", "istio-proxy", mock.HelloProxyV0.ServiceNode())
+	response := makeDiscoveryRequest(ds, "GET", url, t)
+	compareResponse(response, "testdata/rds-weighted-byon.json", t)
+}
+
 func TestRouteDiscoveryFault(t *testing.T) {
 	for _, faultConfig := range []fileConfig{faultRouteRule, faultRouteRuleV2} {
 		_, registry, ds := commonSetup(t)
@@ -627,6 +635,11 @@ func TestListenerDiscoverySidecar(t *testing.T) {
 			name: "weighted",
 			file: weightedRouteRule,
 		},
+		/*
+			{
+				name: "byon",
+				file: byonRouteRule,
+			},*/
 		{
 			name: "weighted",
 			file: weightedRouteRuleV2,
