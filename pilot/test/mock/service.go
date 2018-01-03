@@ -171,6 +171,13 @@ func (sd *ServiceDiscovery) Services() ([]*model.Service, error) {
 	out := make([]*model.Service, 0, len(sd.services))
 	for _, service := range sd.services {
 		out = append(out, service)
+		if service.Annotations != nil && s.Annotations[AliasAnnotation] != "" {
+			alias := &model.Service{}
+			*alias = *svc
+			alias.Hostname = s.Annotations[AliasAnnotation]
+			out = append(out, alias)
+		}
+
 	}
 	return out, sd.ServicesError
 }

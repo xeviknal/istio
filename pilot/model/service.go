@@ -62,6 +62,9 @@ type Service struct {
 
 	// LoadBalancingDisabled indicates that no load balancing should be done for this service.
 	LoadBalancingDisabled bool `json:"-"`
+
+	// Aliases different names for this service.
+	Aliases []string `json:"aliases,omitempty"`
 }
 
 // Port represents a network port where a service is listening for

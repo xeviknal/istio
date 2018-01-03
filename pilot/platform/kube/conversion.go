@@ -48,6 +48,9 @@ const (
 	// PortAuthenticationAnnotationKeyPrefix is the annotation key prefix that used to define
 	// authentication policy.
 	PortAuthenticationAnnotationKeyPrefix = "auth.istio.io"
+
+	// Alias Annotation is an annotation on a service that maps to a different name
+	AliasAnnotation = "alpha.istio.io/alias"
 )
 
 func convertLabels(obj meta_v1.ObjectMeta) model.Labels {
@@ -98,6 +101,7 @@ func convertService(svc v1.Service, domainSuffix string) *model.Service {
 	loadBalancingDisabled := addr == "" && external == "" // headless services should not be load balanced
 
 	serviceaccounts := make([]string, 0)
+	aliases := make([]string, 0)
 	if svc.Annotations != nil {
 		if svc.Annotations[CanonicalServiceAccountsOnVMAnnotation] != "" {
 			for _, csa := range strings.Split(svc.Annotations[CanonicalServiceAccountsOnVMAnnotation], ",") {
@@ -109,9 +113,16 @@ func convertService(svc v1.Service, domainSuffix string) *model.Service {
 				serviceaccounts = append(serviceaccounts, kubeToIstioServiceAccount(ksa, svc.Namespace, domainSuffix))
 			}
 		}
+		/*
+			if svc.Annotations[AliasAnnotation] != "" {
+				for _, ala := range strings.Split(svc.Annotations[AliasAnnotation], ",") {
+					aliases = append(aliases, ala)
+				}
+			}
+		*/
 	}
 	sort.Sort(sort.StringSlice(serviceaccounts))
-
+	//	sort.Sort(sort.StringSlice(aliases))
 	return &model.Service{
 		Hostname:              serviceHostname(svc.Name, svc.Namespace, domainSuffix),
 		Ports:                 ports,
@@ -119,6 +130,7 @@ func convertService(svc v1.Service, domainSuffix string) *model.Service {
 		ExternalName:          external,
 		ServiceAccounts:       serviceaccounts,
 		LoadBalancingDisabled: loadBalancingDisabled,
+		Aliases:               aliases,
 	}
 }
 
