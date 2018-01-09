@@ -65,6 +65,11 @@ type Service struct {
 
 	// Aliases different names for this service.
 	Aliases []string `json:"aliases,omitempty"`
+
+	// Annotations is an unstructured key value map stored with a resource that may be
+	// set by external tools to store and retrieve arbitrary metadata. They are not
+	// queryable and should be preserved when modifying objects.
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 // Port represents a network port where a service is listening for

@@ -271,6 +271,7 @@ var (
 	byonRouteRule = fileConfig{
 		meta: model.ConfigMeta{Type: model.RouteRule.Type, Name: "weighted"},
 		file: "testdata/weighted-byon-route.yaml.golden",
+	}
 
 	weightedRouteRuleV2 = fileConfig{
 		meta: model.ConfigMeta{Type: model.V1alpha2RouteRule.Type, Name: "weighted"},
