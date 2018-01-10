@@ -63,13 +63,8 @@ type Service struct {
 	// LoadBalancingDisabled indicates that no load balancing should be done for this service.
 	LoadBalancingDisabled bool `json:"-"`
 
-	// Aliases different names for this service.
+	// Aliases different hostnames for this service.
 	Aliases []string `json:"aliases,omitempty"`
-
-	// Annotations is an unstructured key value map stored with a resource that may be
-	// set by external tools to store and retrieve arbitrary metadata. They are not
-	// queryable and should be preserved when modifying objects.
-	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 // Port represents a network port where a service is listening for
@@ -342,9 +337,9 @@ func (s *Service) External() bool {
 // Key generates a unique string referencing service instances for a given port and labels.
 // The separator character must be exclusive to the regular expressions allowed in the
 // service declaration.
-func (s *Service) Key(port *Port, tag Labels) string {
+func (s *Service) Key(hostname string, port *Port, tag Labels) string {
 	// TODO: check port is non nil and membership of port in service
-	return ServiceKey(s.Hostname, PortList{port}, LabelsCollection{tag})
+	return ServiceKey(hostname, PortList{port}, LabelsCollection{tag})
 }
 
 // ServiceKey generates a service key for a collection of ports and labels

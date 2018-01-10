@@ -145,7 +145,7 @@ func buildInboundCluster(port int, protocol model.Protocol, timeout *duration.Du
 
 func buildOutboundCluster(hostname string, port *model.Port, labels model.Labels) *Cluster {
 	svc := model.Service{Hostname: hostname}
-	key := svc.Key(port, labels)
+	key := svc.Key(svc.Hostname, port, labels)
 	name := truncateClusterName(OutboundClusterPrefix + key)
 
 	cluster := &Cluster{
@@ -537,10 +537,10 @@ func buildZipkinTracing() *Tracing {
 // "svc.ns.svc.cluster.local:http".
 // Suffix provides the proxy context information - it is the shared sub-domain between co-located
 // service instances (e.g. "namespace", "svc", "cluster", "local")
-func buildVirtualHost(svc *model.Service, port *model.Port, suffix []string, routes []*HTTPRoute) *VirtualHost {
+func buildVirtualHost(svc *model.Service, hostname string, port *model.Port, suffix []string, routes []*HTTPRoute) *VirtualHost {
 	hosts := make([]string, 0)
 	domains := make([]string, 0)
-	parts := strings.Split(svc.Hostname, ".")
+	parts := strings.Split(hostname, ".")
 	shared := sharedHost(suffix, parts)
 
 	// if shared is "svc.cluster.local", then we can add "name.namespace", "name.namespace.svc", etc
@@ -573,7 +573,7 @@ func buildVirtualHost(svc *model.Service, port *model.Port, suffix []string, rou
 	}
 
 	return &VirtualHost{
-		Name:    svc.Key(port, nil),
+		Name:    svc.Key(hostname, port, nil),
 		Domains: domains,
 		Routes:  routes,
 	}

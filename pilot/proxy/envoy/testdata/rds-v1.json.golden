@@ -1,6 +1,81 @@
 {
   "virtual_hosts": [
    {
+    "name": "byon.2.com|http",
+    "domains": [
+     "byon:80",
+     "byon",
+     "byon.2:80",
+     "byon.2",
+     "byon.2.com:80",
+     "byon.2.com",
+     "10.3.0.0:80",
+     "10.3.0.0"
+    ],
+    "routes": [
+     {
+      "prefix": "/",
+      "cluster": "out.byon.default.svc.cluster.local|http",
+      "timeout_ms": 0,
+      "decorator": {
+       "operation": "default-route"
+      }
+     }
+    ]
+   },
+   {
+    "name": "byon.2.corp.com|http",
+    "domains": [
+     "byon:80",
+     "byon",
+     "byon.2:80",
+     "byon.2",
+     "byon.2.corp:80",
+     "byon.2.corp",
+     "byon.2.corp.com:80",
+     "byon.2.corp.com",
+     "10.3.0.0:80",
+     "10.3.0.0"
+    ],
+    "routes": [
+     {
+      "prefix": "/",
+      "cluster": "out.byon.default.svc.cluster.local|http",
+      "timeout_ms": 0,
+      "decorator": {
+       "operation": "default-route"
+      }
+     }
+    ]
+   },
+   {
+    "name": "byon.default.svc.cluster.local|http",
+    "domains": [
+     "byon:80",
+     "byon",
+     "byon.default:80",
+     "byon.default",
+     "byon.default.svc:80",
+     "byon.default.svc",
+     "byon.default.svc.cluster:80",
+     "byon.default.svc.cluster",
+     "byon.default.svc.cluster.local:80",
+     "byon.default.svc.cluster.local",
+     "10.3.0.0:80",
+     "10.3.0.0"
+    ],
+    "routes": [
+     {
+      "prefix": "/",
+      "cluster": "out.byon.default.svc.cluster.local|http",
+      "timeout_ms": 0,
+      "decorator": {
+       "operation": "default-route"
+      }
+     }
+    ]
+   },
+   {
     "name": "hello.default.svc.cluster.local|http",
     "domains": [
      "hello:80",

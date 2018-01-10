@@ -20,16 +20,17 @@ import (
 
 	meshconfig "istio.io/api/mesh/v1alpha1"
 	"istio.io/istio/pilot/model"
-	kube "istio.io/istio/pilot/platform/kube"
 	"istio.io/istio/pilot/proxy"
 )
 
 // Mock values
 var (
-	HelloService = MakeService("hello.default.svc.cluster.local", "10.1.0.0", map[string]string{})
-	WorldService = MakeService("world.default.svc.cluster.local", "10.2.0.0", map[string]string{})
-	ByonService  = MakeService("byon.default.svc.cluster.local", "10.1.0.0", map[string]string{kube.AliasAnnotation: "byon.2.com"})
-	PortHTTP     = &model.Port{
+	HelloService = MakeService("hello.default.svc.cluster.local", "10.1.0.0", nil)
+	WorldService = MakeService("world.default.svc.cluster.local", "10.2.0.0", nil)
+	ByonService  = MakeService("byon.default.svc.cluster.local", "10.3.0.0",
+		[]string{"byon.2.com", "byon.2.corp.com"})
+
+	PortHTTP = &model.Port{
 		Name:                 "http",
 		Port:                 80, // target port 80
 		Protocol:             model.ProtocolHTTP,
@@ -80,7 +81,7 @@ func NewDiscovery(services map[string]*model.Service, versions int) *ServiceDisc
 }
 
 // MakeService creates a mock service
-func MakeService(hostname, address string, annotations map[string]string) *model.Service {
+func MakeService(hostname, address string, aliases []string) *model.Service {
 	return &model.Service{
 		Hostname: hostname,
 		Address:  address,
@@ -108,7 +109,7 @@ func MakeService(hostname, address string, annotations map[string]string) *model
 				Protocol:             model.ProtocolRedis,
 				AuthenticationPolicy: meshconfig.AuthenticationPolicy_INHERIT,
 			}},
-		Annotations: annotations,
+		Aliases: aliases,
 	}
 }
 
@@ -175,12 +176,6 @@ func (sd *ServiceDiscovery) Services() ([]*model.Service, error) {
 	out := make([]*model.Service, 0, len(sd.services))
 	for _, service := range sd.services {
 		out = append(out, service)
-		if service.Annotations != nil && service.Annotations[kube.AliasAnnotation] != "" {
-			alias := &model.Service{}
-			*alias = *service
-			alias.Hostname = service.Annotations[kube.AliasAnnotation]
-			out = append(out, alias)
-		}
 	}
 	return out, sd.ServicesError
 }

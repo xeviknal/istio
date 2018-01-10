@@ -114,7 +114,7 @@ func TestServiceKey(t *testing.T) {
 		want := "hostname|http|a=b,c=d"
 		port := &model.Port{Name: "http", Port: 80, Protocol: model.ProtocolHTTP}
 		labels := model.Labels{"a": "b", "c": "d"}
-		got := svc.Key(port, labels)
+		got := svc.Key(svc.Hostname, port, labels)
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("Service.Key() failed: got %v want %v", got, want)
 		}

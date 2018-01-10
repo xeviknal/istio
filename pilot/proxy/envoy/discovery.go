@@ -512,7 +512,7 @@ func (ds *DiscoveryService) ListAllEndpoints(_ *restful.Request, response *restf
 					})
 				}
 				services = append(services, &keyAndService{
-					Key:   service.Key(port, nil),
+					Key:   service.Key(service.Hostname, port, nil),
 					Hosts: hosts,
 				})
 			}

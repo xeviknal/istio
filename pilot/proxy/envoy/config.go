@@ -611,7 +611,7 @@ func buildOutboundHTTPRoutes(mesh *meshconfig.MeshConfig, sidecar proxy.Node,
 			routes := buildDestinationHTTPRoutes(sidecar, service, servicePort, instances, config)
 
 			if len(routes) > 0 {
-				host := buildVirtualHost(service, servicePort, suffix, routes)
+				host := buildVirtualHost(service, service.Hostname, servicePort, suffix, routes)
 				http := httpConfigs.EnsurePort(servicePort.Port)
 
 				// there should be at most one occurrence of the service for the same
@@ -621,6 +621,19 @@ func buildOutboundHTTPRoutes(mesh *meshconfig.MeshConfig, sidecar proxy.Node,
 				// for example, a service "a" with two ports 80 and 8080, would have virtual
 				// hosts on 80 and 8080 listeners that contain domain "a".
 				http.VirtualHosts = append(http.VirtualHosts, host)
+				for _, alias := range service.Aliases {
+					alias_suffix := strings.Split(alias, ".")
+					alias_host := buildVirtualHost(service, alias, servicePort, alias_suffix[1:], routes)
+					http := httpConfigs.EnsurePort(servicePort.Port)
+
+					// there should be at most one occurrence of the service for the same
+					// port since service port values are distinct; that means the virtual
+					// host domains, which include the sole domain name for the service, do
+					// not overlap for the same route config.
+					// for example, a service "a" with two ports 80 and 8080, would have virtual
+					// hosts on 80 and 8080 listeners that contain domain "a".
+					http.VirtualHosts = append(http.VirtualHosts, alias_host)
+				}
 			}
 		}
 	}
@@ -866,7 +879,7 @@ func buildEgressVirtualHost(rule *routing.EgressRule,
 	// Create a unique orig dst cluster for each service defined by egress rule
 	// So that we can apply circuit breakers, outlier detections, etc., later.
 	svc := model.Service{Hostname: destination}
-	key := svc.Key(port, nil)
+	key := svc.Key(svc.Hostname, port, nil)
 	name := truncateClusterName(key)
 	externalTrafficCluster = buildOriginalDSTCluster(name, mesh.ConnectTimeout)
 	externalTrafficCluster.ServiceName = key
@@ -1004,7 +1017,7 @@ func buildEgressTCPRoute(rule *routing.EgressRule,
 	// So that we can apply circuit breakers, outlier detections, etc., later.
 	destination := rule.Destination.Service
 	svc := model.Service{Hostname: destination}
-	key := svc.Key(port, nil)
+	key := svc.Key(svc.Hostname, port, nil)
 	name := truncateClusterName(key)
 	externalTrafficCluster := buildOriginalDSTCluster(name, mesh.ConnectTimeout)
 	externalTrafficCluster.port = port

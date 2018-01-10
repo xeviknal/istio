@@ -189,15 +189,8 @@ func (c *Controller) Services() ([]*model.Service, error) {
 	out := make([]*model.Service, 0, len(list))
 
 	for _, item := range list {
-		s := *item.(*v1.Service)
-		if svc := convertService(s, c.domainSuffix); svc != nil {
+		if svc := convertService(*item.(*v1.Service), c.domainSuffix); svc != nil {
 			out = append(out, svc)
-			if s.Annotations != nil && s.Annotations[AliasAnnotation] != "" {
-				alias := &model.Service{}
-				*alias = *svc
-				alias.Hostname = s.Annotations[AliasAnnotation]
-				out = append(out, alias)
-			}
 		}
 	}
 	return out, nil

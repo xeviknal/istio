@@ -113,16 +113,15 @@ func convertService(svc v1.Service, domainSuffix string) *model.Service {
 				serviceaccounts = append(serviceaccounts, kubeToIstioServiceAccount(ksa, svc.Namespace, domainSuffix))
 			}
 		}
-		/*
-			if svc.Annotations[AliasAnnotation] != "" {
-				for _, ala := range strings.Split(svc.Annotations[AliasAnnotation], ",") {
-					aliases = append(aliases, ala)
-				}
+
+		if svc.Annotations[AliasAnnotation] != "" {
+			for _, ala := range strings.Split(svc.Annotations[AliasAnnotation], ",") {
+				aliases = append(aliases, ala)
 			}
-		*/
+		}
 	}
 	sort.Sort(sort.StringSlice(serviceaccounts))
-	//	sort.Sort(sort.StringSlice(aliases))
+
 	return &model.Service{
 		Hostname:              serviceHostname(svc.Name, svc.Namespace, domainSuffix),
 		Ports:                 ports,
