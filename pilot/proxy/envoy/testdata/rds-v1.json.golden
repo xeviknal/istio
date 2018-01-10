@@ -9,8 +9,8 @@
      "byon.2",
      "byon.2.com:80",
      "byon.2.com",
-     "10.3.0.0:80",
-     "10.3.0.0"
+     "10.10.0.0:80",
+     "10.10.0.0"
     ],
     "routes": [
      {
@@ -34,8 +34,8 @@
      "byon.2.corp",
      "byon.2.corp.com:80",
      "byon.2.corp.com",
-     "10.3.0.0:80",
-     "10.3.0.0"
+     "10.10.0.0:80",
+     "10.10.0.0"
     ],
     "routes": [
      {
@@ -61,8 +61,8 @@
      "byon.default.svc.cluster",
      "byon.default.svc.cluster.local:80",
      "byon.default.svc.cluster.local",
-     "10.3.0.0:80",
-     "10.3.0.0"
+     "10.10.0.0:80",
+     "10.10.0.0"
     ],
     "routes": [
      {

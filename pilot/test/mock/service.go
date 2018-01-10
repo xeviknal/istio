@@ -27,7 +27,7 @@ import (
 var (
 	HelloService = MakeService("hello.default.svc.cluster.local", "10.1.0.0", nil)
 	WorldService = MakeService("world.default.svc.cluster.local", "10.2.0.0", nil)
-	ByonService  = MakeService("byon.default.svc.cluster.local", "10.3.0.0",
+	ByonService  = MakeService("byon.default.svc.cluster.local", "10.10.0.0",
 		[]string{"byon.2.com", "byon.2.corp.com"})
 
 	PortHTTP = &model.Port{
