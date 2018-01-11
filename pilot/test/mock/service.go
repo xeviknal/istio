@@ -29,6 +29,8 @@ var (
 	WorldService = MakeService("world.default.svc.cluster.local", "10.2.0.0", nil)
 	ByonService  = MakeService("byon.default.svc.cluster.local", "10.10.0.0",
 		[]string{"byon.2.com", "byon.2.corp.com"})
+	VmByonService  = MakeService("vm_byon.default.svc.cluster.local", "10.11.0.0", nil)
+	k8sByonService = MakeService("k8s_byon.default.svc.cluster.local", "10.12.0.0", nil)
 
 	PortHTTP = &model.Port{
 		Name:                 "http",

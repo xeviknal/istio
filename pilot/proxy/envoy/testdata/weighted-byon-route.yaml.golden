@@ -1,9 +1,9 @@
 destination:
-  service: world.default.svc.cluster.local
+  service: byon.default.svc.cluster.local
 route:
   - destination:
-      service: vm_byon_corp_com.default.svc.cluster.local
+      service: vm_byon.default.svc.cluster.local
     weight: 90
   - destination:
-      service: k8s_byon_corp_com.default.svc.cluster.local
+      service: k8s_byon.default.svc.cluster.local
     weight: 10
