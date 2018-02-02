@@ -24,18 +24,21 @@ import (
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/spf13/cobra/doc"
 	"istio.io/istio/pilot/cmd"
-	"istio.io/istio/pilot/cmd/pilot-discovery/server"
+	"istio.io/istio/pilot/pkg/bootstrap"
+	"istio.io/istio/pkg/collateral"
 	"istio.io/istio/pkg/log"
+	"istio.io/istio/pkg/version"
 )
 
 var (
-	serverArgs server.PilotArgs
+	serverArgs bootstrap.PilotArgs
 
 	loggingOptions = log.NewOptions()
 
 	rootCmd = &cobra.Command{
-		Use:   "pilot",
+		Use:   "pilot-discovery",
 		Short: "Istio Pilot",
 		Long:  "Istio Pilot provides fleet-wide traffic management capabilities in the Istio Service Mesh.",
 	}
@@ -52,7 +55,7 @@ var (
 			stop := make(chan struct{})
 
 			// Create the server for the discovery service.
-			discoveryServer, err := server.NewServer(serverArgs)
+			discoveryServer, err := bootstrap.NewServer(serverArgs)
 			if err != nil {
 				return fmt.Errorf("failed to create discovery service: %v", err)
 			}
@@ -71,9 +74,9 @@ var (
 
 func init() {
 	discoveryCmd.PersistentFlags().StringSliceVar(&serverArgs.Service.Registries, "registries",
-		[]string{string(server.KubernetesRegistry)},
+		[]string{string(bootstrap.KubernetesRegistry)},
 		fmt.Sprintf("Comma separated list of platform service registries to read from (choose one or more from {%s, %s, %s, %s, %s})",
-			server.KubernetesRegistry, server.ConsulRegistry, server.EurekaRegistry, server.CloudFoundryRegistry, server.MockRegistry))
+			bootstrap.KubernetesRegistry, bootstrap.ConsulRegistry, bootstrap.EurekaRegistry, bootstrap.CloudFoundryRegistry, bootstrap.MockRegistry))
 	discoveryCmd.PersistentFlags().StringVar(&serverArgs.Config.CFConfig, "cfConfig", "",
 		"Cloud Foundry config file")
 	discoveryCmd.PersistentFlags().StringVar(&serverArgs.Config.KubeConfig, "kubeconfig", "",
@@ -102,13 +105,21 @@ func init() {
 		"Enable profiling via web interface host:port/debug/pprof")
 	discoveryCmd.PersistentFlags().BoolVar(&serverArgs.DiscoveryOptions.EnableCaching, "discovery_cache", true,
 		"Enable caching discovery service responses")
+	// TODO (rshriram): Need v1/v2 endpoints and option to selectively
+	// enable webhook for specific xDS config (cds/lds/etc).
+	discoveryCmd.PersistentFlags().StringVar(&serverArgs.DiscoveryOptions.WebhookEndpoint, "webhookEndpoint", "",
+		"Webhook API endpoint (supports DNS, IP, and unix domain socket.")
 
 	discoveryCmd.PersistentFlags().StringVar(&serverArgs.Service.Consul.Config, "consulconfig", "",
 		"Consul Config file for discovery")
 	discoveryCmd.PersistentFlags().StringVar(&serverArgs.Service.Consul.ServerURL, "consulserverURL", "",
 		"URL for the Consul server")
+	discoveryCmd.PersistentFlags().DurationVar(&serverArgs.Service.Consul.Interval, "consulserverInterval", 2*time.Second,
+		"Interval (in seconds) for polling the Consul service registry")
 	discoveryCmd.PersistentFlags().StringVar(&serverArgs.Service.Eureka.ServerURL, "eurekaserverURL", "",
 		"URL for the Eureka server")
+	discoveryCmd.PersistentFlags().DurationVar(&serverArgs.Service.Eureka.Interval, "eurekaserverInterval", 2*time.Second,
+		"Interval (in seconds) for polling the Eureka service registry")
 
 	// Admission controller arguments.
 	discoveryCmd.PersistentFlags().StringVar(&serverArgs.Admission.ExternalAdmissionWebhookName,
@@ -130,7 +141,12 @@ func init() {
 	cmd.AddFlags(rootCmd)
 
 	rootCmd.AddCommand(discoveryCmd)
-	rootCmd.AddCommand(cmd.VersionCmd)
+	rootCmd.AddCommand(version.CobraCommand())
+	rootCmd.AddCommand(collateral.CobraCommand(rootCmd, &doc.GenManHeader{
+		Title:   "Istio Pilot Discovery",
+		Section: "pilot-discovery CLI",
+		Manual:  "Istio Pilot Discovery",
+	}))
 }
 
 func main() {

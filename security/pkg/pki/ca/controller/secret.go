@@ -20,8 +20,6 @@ import (
 	"reflect"
 	"time"
 
-	// TODO(nmittler): Remove this
-	_ "github.com/golang/glog"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -32,8 +30,8 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	"istio.io/istio/pkg/log"
-	"istio.io/istio/security/pkg/pki"
 	"istio.io/istio/security/pkg/pki/ca"
+	"istio.io/istio/security/pkg/pki/util"
 )
 
 /* #nosec: disable gas linter */
@@ -59,8 +57,9 @@ const (
 
 // SecretController manages the service accounts' secrets that contains Istio keys and certificates.
 type SecretController struct {
-	ca   ca.CertificateAuthority
-	core corev1.CoreV1Interface
+	ca      ca.CertificateAuthority
+	certTTL time.Duration
+	core    corev1.CoreV1Interface
 
 	// Controller and store for service account objects.
 	saController cache.Controller
@@ -72,12 +71,13 @@ type SecretController struct {
 }
 
 // NewSecretController returns a pointer to a newly constructed SecretController instance.
-func NewSecretController(ca ca.CertificateAuthority, core corev1.CoreV1Interface,
+func NewSecretController(ca ca.CertificateAuthority, certTTL time.Duration, core corev1.CoreV1Interface,
 	namespace string) *SecretController {
 
 	c := &SecretController{
-		ca:   ca,
-		core: core,
+		ca:      ca,
+		certTTL: certTTL,
+		core:    core,
 	}
 
 	saLW := &cache.ListWatch{
@@ -226,18 +226,18 @@ func (sc *SecretController) scrtDeleted(obj interface{}) {
 }
 
 func (sc *SecretController) generateKeyAndCert(saName string, saNamespace string) ([]byte, []byte, error) {
-	id := fmt.Sprintf("%s://cluster.local/ns/%s/sa/%s", ca.URIScheme, saNamespace, saName)
-	options := ca.CertOptions{
+	id := fmt.Sprintf("%s://cluster.local/ns/%s/sa/%s", util.URIScheme, saNamespace, saName)
+	options := util.CertOptions{
 		Host:       id,
 		RSAKeySize: keySize,
 	}
 
-	csrPEM, keyPEM, err := ca.GenCSR(options)
+	csrPEM, keyPEM, err := util.GenCSR(options)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	certPEM, err := sc.ca.Sign(csrPEM)
+	certPEM, err := sc.ca.Sign(csrPEM, sc.certTTL, false)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -253,7 +253,7 @@ func (sc *SecretController) scrtUpdated(oldObj, newObj interface{}) {
 	}
 
 	certBytes := scrt.Data[CertChainID]
-	cert, err := pki.ParsePemEncodedCertificate(certBytes)
+	cert, err := util.ParsePemEncodedCertificate(certBytes)
 	if err != nil {
 		// TODO: we should refresh secret in this case since the secret contains an
 		// invalid cert.

@@ -28,7 +28,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
 	// TODO(nmittler): Remove this
 	_ "github.com/golang/glog"
 	"github.com/prometheus/client_golang/api"
@@ -143,8 +142,8 @@ func deleteDefaultRoutingRules() error {
 }
 
 type promProxy struct {
-	namespace      string
-	portFwdProcess *os.Process
+	namespace        string
+	portFwdProcesses []*os.Process
 }
 
 func newPromProxy(namespace string) *promProxy {
@@ -188,6 +187,7 @@ func podLogs(labelSelector string, container string) {
 func (p *promProxy) portForward(labelSelector string, localPort string, remotePort string) error {
 	var pod string
 	var err error
+	var proc *os.Process
 
 	getName := fmt.Sprintf("kubectl -n %s get pod -l %s -o jsonpath='{.items[0].metadata.name}'", p.namespace, labelSelector)
 	pod, err = util.Shell(getName)
@@ -199,11 +199,12 @@ func (p *promProxy) portForward(labelSelector string, localPort string, remotePo
 	log.Infof("Setting up %s proxy", labelSelector)
 	portFwdCmd := fmt.Sprintf("kubectl port-forward %s %s:%s -n %s", strings.Trim(pod, "'"), localPort, remotePort, p.namespace)
 	log.Info(portFwdCmd)
-	if p.portFwdProcess, err = util.RunBackground(portFwdCmd); err != nil {
+	if proc, err = util.RunBackground(portFwdCmd); err != nil {
 		log.Errorf("Failed to port forward: %s", err)
 		return err
 	}
-	log.Infof("running %s port-forward in background, pid = %d", labelSelector, p.portFwdProcess.Pid)
+	p.portFwdProcesses = append(p.portFwdProcesses, proc)
+	log.Infof("running %s port-forward in background, pid = %d", labelSelector, proc.Pid)
 	return nil
 }
 
@@ -223,10 +224,10 @@ func (p *promProxy) Setup() error {
 
 func (p *promProxy) Teardown() (err error) {
 	log.Info("Cleaning up mixer proxy")
-	if p.portFwdProcess != nil {
-		err := p.portFwdProcess.Kill()
+	for _, proc := range p.portFwdProcesses {
+		err := proc.Kill()
 		if err != nil {
-			log.Errorf("Failed to kill port-forward process, pid: %d", p.portFwdProcess.Pid)
+			log.Errorf("Failed to kill port-forward process, pid: %d", proc.Pid)
 		}
 	}
 	return
