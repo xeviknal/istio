@@ -27,9 +27,13 @@ spec:
     spec:
       containers:
       - name: echosrv
-        image: istio/fortio
+        image: istio/fortio:0.6.8-pre1
         ports:
         - containerPort: 8080
+        args:
+          - server
+          - -base-url
+          - http://35.188.228.108/fortio1
 ---
 apiVersion: v1
 kind: Service
