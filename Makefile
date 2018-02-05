@@ -64,16 +64,6 @@ else
    # export GOOS ?= windows
 endif
 
-ifeq ($(GOOS),linux)
-  OS_DIR:=lx
-else ifeq ($(GOOS),darwin)
-  OS_DIR:=mac
-else ifeq ($(GOOS),windows)
-  OS_DIR:=win
-else
-   $(error "Building for $(GOOS) isn't recognized/supported")
-endif
-
 # Another person's PR is adding the debug support, so this is in prep for that
 ifeq ($(origin DEBUG), undefined)
 BUILDTYPE_DIR:=release
@@ -95,7 +85,8 @@ GO_FILES_CMD := find . -name '*.go' | grep -v -E '$(GO_EXCLUDE)'
 # Typically same as GOPATH/bin, so tests work seemlessly with IDEs.
 
 export ISTIO_BIN=$(GO_TOP)/bin
-export ISTIO_OUT:=$(GO_TOP)/out/$(OS_DIR)/$(GOARCH)/$(BUILDTYPE_DIR)
+# Using same package structure as pkg/
+export ISTIO_OUT:=$(GO_TOP)/out/$(GOOS)_$(GOARCH)/$(BUILDTYPE_DIR)
 
 # scratch dir: this shouldn't be simply 'docker' since that's used for docker.save to store tar.gz files
 ISTIO_DOCKER:=${ISTIO_OUT}/docker_temp
@@ -272,7 +263,7 @@ $(MIXER_GO_BINS): depend
 ${ISTIO_OUT}/servicegraph: depend
 	bin/gobuild.sh $@ istio.io/istio/pkg/version ./mixer/example/$(@F)
 
-SECURITY_GO_BINS:=${ISTIO_OUT}/node_agent ${ISTIO_OUT}/istio_ca
+SECURITY_GO_BINS:=${ISTIO_OUT}/node_agent ${ISTIO_OUT}/istio_ca ${ISTIO_OUT}/multicluster_ca
 $(SECURITY_GO_BINS): depend
 	bin/gobuild.sh $@ istio.io/istio/pkg/version ./security/cmd/$(@F)
 
@@ -283,7 +274,7 @@ build: $(PILOT_GO_BINS) $(MIXER_GO_BINS) $(SECURITY_GO_BINS)
 # The first block is for aliases that are the same as the actual binary,
 # while the ones that follow need slight adjustments to their names.
 
-IDENTITY_ALIAS_LIST:=istioctl mixc mixs pilot-agent servicegraph sidecar-injector
+IDENTITY_ALIAS_LIST:=istioctl mixc mixs pilot-agent servicegraph sidecar-injector multicluster_ca
 .PHONY: $(IDENTITY_ALIAS_LIST)
 $(foreach ITEM,$(IDENTITY_ALIAS_LIST),$(eval $(ITEM): ${ISTIO_OUT}/$(ITEM)))
 
@@ -312,6 +303,7 @@ ${ISTIO_OUT}/archive: istioctl-all LICENSE README.md istio.VERSION install/updat
 	cp ${ISTIO_OUT}/istioctl-* ${ISTIO_OUT}/archive/istioctl/
 	cp LICENSE ${ISTIO_OUT}/archive
 	cp README.md ${ISTIO_OUT}/archive
+	cp -r tools ${ISTIO_OUT}/archive
 	install/updateVersion.sh -c "$(ISTIO_DOCKER_HUB),$(VERSION)" -A "$(ISTIO_URL)/deb" \
                                  -x "$(ISTIO_DOCKER_HUB),$(VERSION)" -p "$(ISTIO_DOCKER_HUB),$(VERSION)" \
                                  -i "$(ISTIO_URL)/$(ISTIO_URL_ISTIOCTL)" \
