@@ -104,6 +104,10 @@ var (
 	// InvalidRegexp defines a diag.MessageType for message "InvalidRegexp".
 	// Description: Invalid Regex
 	InvalidRegexp = diag.NewMessageType(diag.Warning, "IST0122", "Field %q regular expression invalid: %q (%s)")
+
+	// NoMatchingWorkloadsFound defines a diag.MessageType for message "NoMatchingWorkloadsFound".
+	// Description: There aren't workloads matching this the resource labels
+	NoMatchingWorkloadsFound = diag.NewMessageType(diag.Warning, "IST0123", "No matching workloads for this resource with the following labels: %s")
 )
 
 // All returns a list of all known message types.
@@ -133,6 +137,7 @@ func All() []*diag.MessageType {
 		PolicyResourceIsDeprecated,
 		MeshPolicyResourceIsDeprecated,
 		InvalidRegexp,
+		NoMatchingWorkloadsFound,
 	}
 }
 
@@ -370,5 +375,14 @@ func NewInvalidRegexp(r *resource.Instance, where string, re string, problem str
 		where,
 		re,
 		problem,
+	)
+}
+
+// NewNoMatchingWorkloadsFound returns a new diag.Message based on NoMatchingWorkloadsFound.
+func NewNoMatchingWorkloadsFound(r *resource.Instance, labels string) diag.Message {
+	return diag.NewMessage(
+		NoMatchingWorkloadsFound,
+		r,
+		labels,
 	)
 }

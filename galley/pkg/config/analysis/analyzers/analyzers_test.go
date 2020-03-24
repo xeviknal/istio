@@ -444,6 +444,16 @@ var testGrid = []testCase{
 			{msg.InvalidRegexp, "VirtualService lots-of-regexes"},
 		},
 	},
+	{
+		name: "authorizationpolicies",
+		inputFiles: []string{
+			"testdata/authorizationpolicies.yaml",
+		},
+		analyzer: &auth.AuthorizationPoliciesAnalyzer{},
+		expected: []message{
+			{msg.NoMatchingWorkloadsFound, "AuthorizationPolicy httpbin-nopods"},
+		},
+	},
 }
 
 // regex patterns for analyzer names that should be explicitly ignored for testing
